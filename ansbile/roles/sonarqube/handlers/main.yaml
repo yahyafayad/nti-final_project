@@ -1,0 +1,8 @@
+- name: Generate Jenkins One Time Password
+  shell: cat /var/lib/jenkins/secrets/initialAdminPassword || true
+  register: Password
+  notify: Displaying One Time Password
+
+- name: Displaying One Time Password
+  debug:
+    var: Password.stdout

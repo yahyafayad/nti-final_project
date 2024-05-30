@@ -1,0 +1,5 @@
+package: nginx
+file_names:
+  - file.css 
+  - file.js
+message: Hello From Sami Website 

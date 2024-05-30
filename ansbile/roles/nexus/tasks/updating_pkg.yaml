@@ -1,0 +1,3 @@
+- name: Update the system
+  yum:
+    update_cache: yes

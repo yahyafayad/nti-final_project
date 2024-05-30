@@ -1,0 +1,12 @@
+- name: Install Docker  
+  yum:
+    name: docker
+
+- name: Restarting Docker service
+  service:
+    name: docker
+    enabled: yes
+    state: restarted
+
+- name: Running Sonarqube 
+  shell: docker run -d --name sonar -p 9000:9000 sonarqube:lts-community

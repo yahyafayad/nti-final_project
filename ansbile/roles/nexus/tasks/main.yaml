@@ -1,0 +1,5 @@
+
+- include_tasks: updating_pkg.yaml
+- include_tasks: nexus.yaml
+- include_tasks: updating_pkg.yaml
+- include_tasks: cloud_watch.yaml

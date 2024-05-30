@@ -1,0 +1,62 @@
+
+- name: Install Java 1.8.0 on Amazon Linux 2
+  shell: yum install java-1.8.0-openjdk.x86_64 -y 
+- name: Download Sonatype Nexus
+  get_url:
+    url: https://download.sonatype.com/nexus/3/latest-unix.tar.gz
+    dest: /opt/latest-unix.tar.gz
+    mode: '0644'
+
+- name: Unarchive Nexus tar
+  unarchive:
+    src: /opt/latest-unix.tar.gz
+    dest: /opt/
+    remote_src: yes
+
+- name: Adding Group nexus
+  group:
+    name: nexus
+    gid: 1001
+- name: Adding nexus user
+  user:
+    name: nexus
+    uid: 1001
+    group: nexus
+    shell: /bin/bash
+    home: /home/nexus
+    create_home: yes
+    password: "{{ 'nexus' | password_hash('sha512') }}"
+
+
+- name: Changing ownership of Nexus folder
+  file:
+    path: /opt/nexus-3.68.1-02
+    state: directory
+    recurse: yes
+    owner: nexus
+    group: nexus
+- name: Changing ownership of Sonatype folder
+  file:
+    path: /opt/sonatype-work
+    state: directory
+    recurse: yes
+    owner: nexus
+    group: nexus
+
+- name: Edit Nexus Cfg to add nexus user 
+  lineinfile:
+    path: /opt/nexus-3.68.1-02/bin/nexus.rc
+    regexp: '^#run_as_user='
+    line: run_as_user="nexus"
+
+- name: Starting Nexus
+  become_user: nexus
+  shell: /opt/nexus-3.68.1-02/bin/nexus start
+
+- name: Getting one time password for  Admin user 
+  shell: cat /opt/sonatype-work/nexus3/admin.password || true
+  register: password
+
+- name: Displaying one time password for  Admin user 
+  debug:
+    var: password.stdout
