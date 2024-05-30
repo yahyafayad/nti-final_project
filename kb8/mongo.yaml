@@ -1,0 +1,60 @@
+piVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongo
+spec:
+  serviceName: "mongo"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+      - name: mongo
+        image: mongo:4.4
+        command:
+        - mongod
+        - "--bind_ip_all"
+        - "--replSet"
+        - rs0
+        ports:
+        - containerPort: 27017
+          name: mongo
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          value: root
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          value: "123"
+        volumeMounts:
+        - name: mongo-persistent-storage
+          mountPath: /data/db
+      initContainers:
+      - name: init-mongo
+        image: mongo:4.4
+        command:
+        - bash
+        - "-c"
+        - >
+          if [ ! -f /data/db/.initialized ]; then
+            mongod --bind_ip_all --replSet rs0 --fork --logpath /var/log/mongodb.log;
+            until mongo --eval "print(\"waited for connection\")"; do sleep 2; done;
+            mongo --eval "rs.initiate()";
+            mongo admin -u ${MONGO_INITDB_ROOT_USERNAME} -p ${MONGO_INITDB_ROOT_PASSWORD} --eval "db.createUser({user: '${MONGO_INITDB_ROOT_USERNAME}', pwd: '${MONGO_INITDB_ROOT_PASSWORD}', roles: [{role: 'root', db: 'admin'}]})";
+            touch /data/db/.initialized;
+            mongod --shutdown;
+          fi
+        volumeMounts:
+        - name: mongo-persistent-storage
+          mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: mongo-persistent-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi
