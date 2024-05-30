@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:latest
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 123
+
+  server:
+    build: ./backend
+    # volumes:
+    #   - ./server:/app
+    ports:
+      - "3001:3001"
+    depends_on:
+      - mongo
+    environment:
+      MONGO_URI: mongodb://root:123@mongo:27017/todos?authSource=admin
+
+  client:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - server
+
+volumes:
+  mongo_data:
