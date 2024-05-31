@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: 058264315018.dkr.ecr.eu-west-3.amazonaws.com/nti-backend-image:57
+        env:
+        - name: MONGO_URL
+          value: "mongodb://root:123@mongo:27017/todos?authSource=admin"
+        ports:
+        - containerPort: 3000
